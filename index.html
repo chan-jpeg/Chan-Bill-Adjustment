@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chan Billing Adjustment Calculator</title>
+
+<style>
+/* --- BASE RESET & THEME --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: linear-gradient(135deg, #070a13 0%, #0d1326 100%);
+  color: #e2e8f0;
+  min-height: 100vh;
+  padding: 40px 20px;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+  width: 100%;
+  max-width: 1100px;
+  margin: auto;
+  background: rgba(20, 27, 47, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 40px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+
+/* --- SECURE GATEWAY LOGIN INTERFACE --- */
+.login-wrapper {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  background: rgba(13, 19, 35, 0.9);
+  padding: 35px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+
+.login-subtitle {
+  color: #64748b;
+  font-size: 13px;
+  margin-bottom: 25px;
+  margin-top: -25px;
+}
+
+.login-error-msg {
+  color: #ef4444;
+  font-size: 13px;
+  margin-bottom: 15px;
+  display: none;
+  font-weight: 600;
+}
+
+/* --- WORKSPACE CONTAINER CONTROLLERS --- */
+#mainWorkspace {
+  display: none; /* Holds application locked until auth passes */
+}
+
+/* --- STATIC TOP CONSOLE REBATE TOGGLE --- */
+.console-toggle-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+  margin-top: -10px;
+}
+
+.toggle-container {
+  background: rgba(13, 19, 35, 0.9);
+  padding: 5px;
+  border-radius: 30px;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  display: flex;
+  gap: 4px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.toggle-option {
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #94a3b8;
+  cursor: pointer;
+  border-radius: 20px;
+  transition: all 0.2s ease;
+  user-select: none;
+  text-align: center;
+}
+
+.toggle-option.active {
+  background: #38bdf8;
+  color: #040814;
+  box-shadow: 0 2px 10px rgba(56, 189, 248, 0.35);
+}
+
+.toggle-option:hover:not(.active) {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* --- HEADERS --- */
+h2 {
+  text-align: center;
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 35px;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+h3 {
+  color: #38bdf8;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-badge {
+  font-size: 13px;
+  color: #94a3b8;
+  float: left;
+  margin-top: -53px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.user-badge strong {
+  color: #38bdf8;
+}
+
+/* --- SECTIONS & GRIDS --- */
+.section {
+  background: rgba(13, 19, 35, 0.8);
+  padding: 25px;
+  border-radius: 14px;
+  margin-bottom: 25px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  transition: all 0.4s ease;
+}
+
+/* Dynamic Class for Rental Mode Blur */
+.section.section-disabled-blur {
+  filter: blur(5px);
+  opacity: 0.35;
+  pointer-events: none;
+  user-select: none;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+}
+
+.full { 
+  grid-column: 1 / -1; 
+}
+
+hr {
+  border: 0;
+  height: 1px;
+  background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.1), rgba(255,255,255,0));
+  margin: 30px 0;
+}
+
+/* --- FORM ELEMENTS --- */
+label {
+  font-weight: 600;
+  font-size: 11px;
+  color: #94a3b8;
+  display: block;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.input-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+input, select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  font-size: 14px;
+  background: #090d16;
+  color: #ffffff;
+  transition: all 0.2s ease-in-out;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+}
+
+.input-error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+}
+
+/* --- BLURRED & HIDDEN STATE FOR DYNAMIC FIELDS --- */
+.hidden-blur-wrapper {
+  filter: blur(10px);
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  height: 0;
+  overflow: hidden;
+  margin-top: 0;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.visible-wrapper {
+  filter: blur(0px);
+  opacity: 1;
+  pointer-events: auto;
+  user-select: auto;
+  height: auto;
+  margin-top: 10px;
+}
+
+/* --- BUTTONS --- */
+button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  background: #38bdf8;
+  color: #040814;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
+}
+
+button:hover {
+  background: #7dd3fc;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(56, 189, 248, 0.3);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.btn-logout {
+  width: auto;
+  padding: 8px 16px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  font-size: 12px;
+  box-shadow: none;
+  float: right;
+  margin-top: -57px;
+}
+
+.btn-logout:hover {
+  background: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+/* --- STATUS & TAGGING --- */
+.tagging-container {
+  background: #090d16;
+  padding: 15px 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  margin: 20px 0;
+}
+
+#rebateTagging {
+  font-weight: 700;
+  display: block;
+  margin-top: 5px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+/* --- RESULTS DASHBOARD --- */
+.results {
+  margin-top: 35px;
+  background: linear-gradient(180deg, rgba(17, 24, 43, 0.9) 0%, rgba(13, 19, 35, 0.9) 100%);
+  padding: 30px;
+  border-radius: 14px;
+  display: none;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.highlight-box {
+  background: rgba(56, 189, 248, 0.05);
+  border: 1px dashed rgba(56, 189, 248, 0.2);
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.highlight {
+  font-size: 28px;
+  font-weight: 800;
+  color: #38bdf8;
+}
+
+/* --- TABLES --- */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 15px;
+  font-size: 14px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: #cbd5e1;
+  background: rgba(9, 13, 22, 0.4);
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+td:first-child {
+  font-weight: 600;
+  color: #94a3b8;
+  width: 30%;
+  background: rgba(9, 13, 22, 0.6);
+}
+
+/* --- RESPONSIVE STRUCTURING --- */
+@media(max-width: 900px){
+  .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .btn-logout {
+    margin-top: 0;
+    float: none;
+    display: block;
+    margin: 10px auto;
+  }
+  .user-badge {
+    float: none;
+    display: block;
+    width: fit-content;
+    margin: 10px auto;
+    margin-top: 0;
+  }
+  .toggle-option {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+}
+
+@media(max-width:768px){
+  body { padding: 15px 10px; }
+  .container { padding: 20px; }
+  .grid, .grid-3 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+
+<body>
+
+  <div class="login-wrapper" id="loginPortal">
+    <h2>System Gateway</h2>
+    <div class="login-subtitle">Secure Verification Terminal</div>
+    
+    <div class="login-error-msg" id="loginErrorMessage">Access Denied: Invalid Console Credentials</div>
+    
+    <div class="input-group">
+      <label>User Identifier</label>
+      <input type="text" id="usernameInput" placeholder="Enter registration ID">
+    </div>
+    
+    <div class="input-group">
+      <label>Secure Key Matrix</label>
+      <input type="password" id="passwordInput" placeholder="••••••••" onkeydown="if(event.key === 'Enter') validateLoginAuthentication()">
+    </div>
+    
+    <button onclick="validateLoginAuthentication()">Authenticate Terminal Console</button>
+  </div>
+
+
+  <div class="container" id="mainWorkspace">
+
+    <h2>Chan Billing Adjustment Calculator</h2>
+    <div class="user-badge" id="userWelcomeDisplay">Console: <strong>-</strong></div>
+    <button class="btn-logout" onclick="closeSecureSession()">🔒 Close Console</button>
+
+    <div class="console-toggle-wrapper">
+      <div class="toggle-container">
+        <div class="toggle-option active" id="modeNonService" onclick="switchRebateMode('non-service')">Non-Service Rebate</div>
+        <div class="toggle-option" id="modeRental" onclick="switchRebateMode('rental')">Rental Rebate</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>👤 Customer Information</h3>
+      <div class="grid">
+        <div>
+          <label id="ticketNumberLabel">Repair Ticket Number</label>
+          <input type="text" id="repairTicketNumber" placeholder="Enter reference tracking number">
+        </div>
+        <div>
+          <label>Customer Name</label>
+          <input type="text" id="customerName" placeholder="Enter full name">
+        </div>
+        <div>
+          <label>Account Number</label>
+          <input type="text" id="accountNumber" placeholder="Enter account number">
+        </div>
+        <div>
+          <label>Service Number</label>
+          <input type="text" id="serviceNumber" placeholder="Enter service number">
+        </div>
+        <div>
+          <label>Invoice Number</label>
+          <input type="text" id="invoiceNumber" placeholder="Enter invoice number">
+        </div>
+        <div class="full">
+          <label>Others</label>
+          <input type="text" id="others" placeholder="Additional details or special tracking references">
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>💳 Billing Details</h3>
+      <div class="grid">
+        <div>
+          <label>Plan Amount (VAT INC)</label>
+          <input type="number" id="planAmount" value="1299">
+        </div>
+        <div>
+          <label>Billing Start Date</label>
+          <input type="date" id="billingStartDate">
+        </div>
+        <div>
+          <label>Adjustment Start Date</label>
+          <input type="date" id="adjustmentStartDate">
+        </div>
+        <div>
+          <label>Adjustment End Date</label>
+          <input type="date" id="adjustmentEndDate">
+        </div>
+        <div>
+          <label>Voice Discount (VAT EX)</label>
+          <input type="number" id="voiceDiscount" value="0">
+        </div>
+        <div>
+          <label>Data Discount (VAT EX)</label>
+          <input type="number" id="dataDiscount" value="0">
+        </div>
+        <div class="full">
+          <label>Type of Adjustment</label>
+          <select id="discountTarget">
+            <option value="voice">VOICE</option>
+            <option value="data50">DATA - 50%</option>
+            <option value="data75">DATA - 75%</option>
+            <option value="data100">DATA - 100%</option>
+            <option value="both">VOICE + DATA</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="ofscTaggingSection">
+      <h3>⚙️ OFSC Tagging</h3>
+      <div class="grid-3">
+        <div>
+          <label>Category</label>
+          <select id="ofscCategory" onchange="populateResolution()">
+            <option value="">Select</option>
+            <option value="fiberInside">Fiber - Inside</option>
+            <option value="copperInside">Copper - Inside</option>
+            <option value="fiberOutside">Fiber - Outside</option>
+            <option value="copperOutside">Copper - Outside</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Resolution</label>
+          <select id="resolution" onchange="populateElements()">
+            <option value="">Select Resolution</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Affected Element</label>
+          <select id="affectedElement" onchange="populateFindings()">
+            <option value="">Select Element</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Findings</label>
+          <select id="findings" onchange="showTagging()">
+            <option value="">Select Findings</option>
+          </select>
+        </div>
+        
+        <div class="full hidden-blur-wrapper" id="nonRebatableWrapper">
+          <label>Non-Rebatable Reason Selector</label>
+          <select id="nonRebatableReason">
+            <option value="">-- Select Reason if Not Rebatable --</option>
+            <option value="Customer requesting for rebate but FT is still open (issue resolved as confirmed by customer)">Customer requesting for rebate but FT is still open (issue resolved as confirmed by customer)</option>
+            <option value="Customer requesting for rebate but FT is still open (issue not yet resolved )- For irate subs only">Customer requesting for rebate but FT is still open (issue not yet resolved )- For irate subs only</option>
+            <option value="Customer requesting for rebate but claimed date is different from the FT create and close date">Customer requesting for rebate but claimed date is different from the FT create and close date</option>
+            <option value="Customer requesting for rebate but no created FT">Customer requesting for rebate but no created FT</option>
+            <option value="Prolonged closed FT but Not rebatable">Prolonged closed FT but Not rebatable</option>
+            <option value="Not rebatable, FT was closed within SLA (36 hours) but subs irate">Not rebatable, FT was closed within SLA (36 hours) but subs irate</option>
+            <option value="Discounted MSF requested Non Service rebate">Discounted MSF requested Non Service rebate</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="tagging-container">
+        <label>Calculated Rebate Status</label>
+        <span id="rebateTagging" style="color:#64748b;">-</span>
+      </div>
+    </div>
+
+    <div style="margin-top: 25px;">
+      <button onclick="calculateAdjustment()">Compute System Adjustment</button>
+    </div>
+
+    <div class="results" id="results">
+      <h3>📊 Computation Breakdown</h3>
+      
+      <div class="grid" style="margin-bottom: 20px;">
+        <div>
+          <table style="margin-top:0;">
+            <tr><td>Customer</td><td id="rCustomer">-</td></tr>
+            <tr><td>Service No.</td><td id="rService">-</td></tr>
+            <tr><td>Invoice No.</td><td id="rInvoice">-</td></tr>
+          </table>
+        </div>
+        <div>
+          <table style="margin-top:0;">
+            <tr><td>Billing Target Days</td><td><span id="billingDays">-</span> Days</td></tr>
+            <tr><td>Impacted Downtime</td><td><span id="nonServiceDays">-</span> Days</td></tr>
+            <tr><td>Applied Discounts (VAT EX)</td><td>₱ <span id="discountAmount">-</span></td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-bottom: 10px;">
+        <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+          <label>Data VAT INC</label>
+          <span style="font-size:16px; font-weight:600;">₱ <span id="dataVatInc">-</span></span>
+        </div>
+        <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+          <label>Data VAT EX</label>
+          <span style="font-size:16px; font-weight:600;">₱ <span id="dataVatEx">-</span></span>
+        </div>
+        <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+          <label>Voice VAT INC</label>
+          <span style="font-size:16px; font-weight:600;">₱ <span id="voiceVatInc">-</span></span>
+        </div>
+        <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+          <label>Voice VAT EX</label>
+          <span style="font-size:16px; font-weight:600;">₱ <span id="voiceVatExDisplay">-</span></span>
+        </div>
+      </div>
+
+      <div class="highlight-box">
+        <label>Final Verified Adjustment Credit</label>
+        <div class="highlight">₱ <span id="casioTotal">0.00</span></div>
+      </div>
+
+      <button class="btn-secondary" onclick="copyCasioLine()">📋 Copy CASIO System Line</button>
+
+      <hr>
+
+      <h3>📋 Casio Vertical Interface Summary</h3>
+      <table>
+        <tr><td>C (Identity Details)</td><td id="tCustomer"></td></tr>
+        <tr><td>A (Adjustment Credit)</td><td id="tAmount" style="color:#4ade80; font-weight:700;"></td></tr>
+        <tr><td>S (Service Target)</td><td id="tService"></td></tr>
+        <tr><td>I (Invoice Target)</td><td id="tInvoice"></td></tr>
+        <tr><td>O (System Operational Memo)</td><td id="tOthers" style="font-family:monospace; font-size:12px; color:#94a3b8;"></td></tr>
+      </table>
+    </div>
+
+  </div>
+
+<script>
+// --- GLOBAL APPLICATION STATE CONFIGURATION ---
+let currentRebateMode = "non-service"; 
+
+const allowedUsers = {
+  "admin": { key: "chan1234", label: "System Admin" },
+  "daven": { key: "qadaven123", label: "Quality Assurance" },
+  "chan": { key: "pogiako123", label: "The Great Master" },
+  "osep": { key: "tlosep123", label: "Team Leadr" }
+};
+
+function validateLoginAuthentication() {
+  const userField = document.getElementById("usernameInput");
+  const passField = document.getElementById("passwordInput");
+  const errContainer = document.getElementById("loginErrorMessage");
+
+  const normalizedUser = userField.value.trim().toLowerCase();
+  const rawPassword = passField.value;
+
+  if (allowedUsers[normalizedUser] && allowedUsers[normalizedUser].key === rawPassword) {
+    errContainer.style.display = "none";
+    document.getElementById("userWelcomeDisplay").innerHTML = `Console: <strong>${allowedUsers[normalizedUser].label}</strong>`;
+    document.getElementById("loginPortal").style.display = "none";
+    document.getElementById("mainWorkspace").style.display = "block";
+    userField.value = "";
+    passField.value = "";
+  } else {
+    errContainer.style.display = "block";
+    passField.value = "";
+    passField.focus();
+  }
+}
+
+function closeSecureSession() {
+  document.getElementById("mainWorkspace").style.display = "none";
+  document.getElementById("results").style.display = "none";
+  document.getElementById("loginPortal").style.display = "block";
+}
+
+// --- DYNAMIC REBATE CONFIGURATION INTERRUPT SWITCH ---
+function switchRebateMode(mode) {
+  currentRebateMode = mode;
+  
+  const optNonService = document.getElementById("modeNonService");
+  const optRental = document.getElementById("modeRental");
+  const labelElement = document.getElementById("ticketNumberLabel");
+  const ofscSection = document.getElementById("ofscTaggingSection");
+
+  if(mode === "non-service") {
+    optNonService.classList.add("active");
+    optRental.classList.remove("active");
+    labelElement.innerText = "Repair Ticket Number";
+    ofscSection.classList.remove("section-disabled-blur");
+  } else {
+    optRental.classList.add("active");
+    optNonService.classList.remove("active");
+    labelElement.innerText = "Service Order Number";
+    ofscSection.classList.add("section-disabled-blur");
+    
+    // Clear out historical selected variables from RAM
+    document.getElementById("ofscCategory").value = "";
+    document.getElementById("resolution").innerHTML = '<option value="">Select Resolution</option>';
+    document.getElementById("affectedElement").innerHTML = '<option value="">Select Element</option>';
+    document.getElementById("findings").innerHTML = '<option value="">Select Findings</option>';
+    document.getElementById("nonRebatableWrapper").classList.remove("visible-wrapper");
+    document.getElementById("nonRebatableReason").value = "";
+    document.getElementById("rebateTagging").innerText = "NOT APPLICABLE (RENTAL REBATE MODE)";
+    document.getElementById("rebateTagging").style.color = "#64748b";
+  }
+}
+
+function formatMoney(value){
+  return Number(value).toLocaleString('en-PH',{
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  });
+}
+
+const ofscData = {
+  fiberInside: {
+    "FIXED": {
+      "CIGNAL ACCESSORIES": { "DEFECTIVE": "REBATABLE", "WRONG SETTING": "NOT REBATABLE" },
+      "CUSTOMER PREMISE FIC": { "DEFECTIVE": "REBATABLE" },
+      "INDOOR FIBER": { "DEFECTIVE": "REBATABLE" },
+      "IOO": { "DEFECTIVE": "REBATABLE" },
+      "ONU": { "WRONG CONFIGURATION": "NOT REBATABLE", "WRONG SETTING": "NOT REBATABLE" },
+      "ONU PATCH CORD/CABLE": { "DEFECTIVE": "REBATABLE", "WRONG SETTING": "NOT REBATABLE" },
+      "TELSET": { "WRONG CONFIGURATION": "NOT REBATABLE", "WRONG SETTING": "NOT REBATABLE" },
+      "TELSET LINE CORD/CABLE": { "DEFECTIVE": "REBATABLE", "WRONG SETTING": "NOT REBATABLE" },
+      "WHOLE HOME WIFI": { "WRONG CONFIGURATION": "NOT REBATABLE", "WRONG SETTING": "NOT REBATABLE" }
+    },
+    "REPLACED": {
+      "CIGNAL ACCESSORIES": { "MISSING": "NOT REBATABLE" },
+      "CUSTOMER PREMISE FIC": { "DEFECTIVE": "REBATABLE" },
+      "INDOOR FIBER": { "DEFECTIVE": "REBATABLE" },
+      "IOO": { "DEFECTIVE": "REBATABLE" },
+      "ONU": { "CALAMITY": "REBATABLE", "CUSTOMER INITIATED": "NOT REBATABLE", "DEFECTIVE": "REBATABLE", "MISSING": "NOT REBATABLE", "PLDT INITIATED": "REBATABLE", "VOID WARRANTY": "NOT REBATABLE" }
+    },
+    "NO FURTHER ACTION REQUIRED": {
+      "NO AFFECTED ELEMENT": { "CALLTHRU OK": "NOT REBATABLE", "NO TROUBLE FOUND": "NOT REBATABLE", "CUSTOMER CANCELLED REQUEST": "NOT REBATABLE", "DUPLICATE/ERRONEOUS TICKET": "NOT REBATABLE" }
+    },
+    "ADVISED CAR": {
+      "ONU": { "VOID WARRANTY": "NOT REBATABLE" },
+      "UNRESOLVED DUE TO DEPENDENCY": { "CALAMITY": "REBATABLE", "CONDUIT": "NOT REBATABLE", "HOUSE CLOSED": "NOT REBATABLE", "MTTC/TTC NO ACCESS": "SUBS FAULT", "NO WORKING PERMIT": "NOT REBATABLE", "WITH PENDING SO": "NOT REBATABLE", "REFUSED ENTRY": "NOT REBATABLE", "SECURITY THREAT": "NOT REBATABLE", "UNDER RENOVATION": "NOT REBATABLE", "WITH ACCOUNT TREATMENT": "NOT REBATABLE" }
+    },
+    "PORT CONFIGURATION": { "NAP PORT": { "WRONG CONFIGURATION": "REBATABLE" } },
+    "PORT REFRESH": { "NAP PORT": { "NO OBSERVABLE CAUSE": "REBATABLE" } },
+    "UPSELL": { "HOME WIFI": { "CUSTOMER INITIATED": "SUBS FAULT" } }
+  },
+  copperInside: {
+    "FIXED": {
+      "CABINET JUMPERWIRE": { "DEFECTIVE": "REBATABLE" },
+      "CABINET TERMINAL STRIP": { "DEFECTIVE": "REBATABLE" },
+      "MODEM": { "WRONG CONFIGURATION": "NOT REBATABLE", "WRONG SETTING": "NOT REBATABLE" }
+    },
+    "REPLACED": {
+      "MODEM": { "CALAMITY": "REBATABLE", "CUSTOMER INITIATED": "NOT REBATABLE", "DEFECTIVE": "REBATABLE", "MISSING": "NOT REBATABLE", "PLDT INITIATED": "REBATABLE", "VOID WARRANTY": "NOT REBATABLE" }
+    }
+  },
+  fiberOutside: {
+    "FIXED": {
+      "NAP FIC": { "DEFECTIVE": "REBATABLE" },
+      "NAP PON": { "DEFECTIVE": "REBATABLE" },
+      "SUBSLOOP FIBER DROP": { "3RD PARTY": "REBATABLE", "CALAMITY": "REBATABLE", "DEFECTIVE": "REBATABLE" },
+      "SUBSLOOP FIC": { "DEFECTIVE": "REBATABLE" },
+      "SUBSLOOP OJB": { "DEFECTIVE": "REBATABLE" }
+    },
+    "REPLACED": {
+      "NAP FIC": { "DEFECTIVE": "REBATABLE" },
+      "NAP PON": { "DEFECTIVE": "REBATABLE" },
+      "SUBSLOOP FIBER DROP": { "3RD PARTY": "REBATABLE", "CALAMITY": "REBATABLE", "DEFECTIVE": "REBATABLE" },
+      "SUBSLOOP FIC": { "DEFECTIVE": "REBATABLE" },
+      "SUBSLOOP OJB": { "3RD PARTY": "REBATABLE", "CALAMITY": "REBATABLE", "DEFECTIVE": "REBATABLE", "MISSING": "REBATABLE" }
+    },
+    "NO FURTHER ACTION REQUIRED": {
+      "NO AFFECTED ELEMENT": { "NO TROUBLE FOUND": "NOT REBATABLE", "CUSTOMER CANCELLED REQUEST": "NOT REBATABLE", "DUPLICATE/ERRONEOUS TICKET": "NOT REBATABLE" }
+    },
+    "ADVISED CAR": {
+      "UNRESOLVED DUE TO DEPENDENCY": { "CALAMITY": "REBATABLE", "HOUSE CLOSED": "NOT REBATABLE", "NO WORKING PERMIT": "NOT REBATABLE", "REFUSED ENTRY": "NOT REBATABLE", "SECURITY THREAT": "NOT REBATABLE", "UNDER RENOVATION": "NOT REBATABLE", "WITH PENDING SO": "NOT REBATABLE", "WITH ACCOUNT TREATMENT": "NOT REBATABLE" },
+      "CUSTOMER RECORD": { "WITH DISCREPANCY IN ACTUAL": "NOT REBATABLE" }
+    }
+  },
+  copperOutside: {
+    "FIXED": {
+      "CABINET JUMPERWIRE": { "DEFECTIVE": "REBATABLE" },
+      "CABINET TERMINAL STRIP": { "DEFECTIVE": "REBATABLE" },
+      "DP JUMPERWIRE": { "DEFECTIVE": "REBATABLE" },
+      "DP TERMINAL STRIP": { "DEFECTIVE": "REBATABLE" }
+    }
+  }
+};
+
+function calculateAdjustment(){
+  document.getElementById("billingStartDate").classList.remove("input-error");
+  document.getElementById("adjustmentStartDate").classList.remove("input-error");
+  document.getElementById("adjustmentEndDate").classList.remove("input-error");
+
+  const planAmount = parseFloat(document.getElementById("planAmount").value) || 0;
+  const voiceDiscountEx = parseFloat(document.getElementById("voiceDiscount").value) || 0;
+  const dataDiscountEx = parseFloat(document.getElementById("dataDiscount").value) || 0;
+  const mode = document.getElementById("discountTarget").value;
+
+  const statementDate = new Date(document.getElementById("billingStartDate").value);
+  const startDate = new Date(document.getElementById("adjustmentStartDate").value);
+  const endDate = new Date(document.getElementById("adjustmentEndDate").value);
+
+  if (isNaN(statementDate.getTime()) || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    alert("Please complete all dates.");
+    return;
+  }
+
+  // Calculate base billing days for the start month
+  const billingDays = new Date(statementDate.getFullYear(), statementDate.getMonth() + 1, 0).getDate();
+  
+  // ALLOWANCE ADJUSTMENT: Extend limit to include the 1st of the subsequent calendar month
+  const cycleEndLimitDate = new Date(statementDate.getTime());
+  cycleEndLimitDate.setDate(cycleEndLimitDate.getDate() + billingDays); // Allows crossover index matching (e.g., June 1 to July 1)
+
+  const isStartOutsideCycle = (startDate < statementDate || startDate > cycleEndLimitDate);
+  const isEndOutsideCycle = (endDate < statementDate || endDate > cycleEndLimitDate);
+
+  if (isStartOutsideCycle || isEndOutsideCycle) {
+    if (isStartOutsideCycle) document.getElementById("adjustmentStartDate").classList.add("input-error");
+    if (isEndOutsideCycle) document.getElementById("adjustmentEndDate").classList.add("input-error");
+
+    const formatOptions = { month: 'short', day: 'numeric', year: 'numeric' };
+    const rangeStart = statementDate.toLocaleDateString('en-US', formatOptions);
+    const rangeEnd = cycleEndLimitDate.toLocaleDateString('en-US', formatOptions);
+    
+    alert(`Validation Error: Adjustment timestamps must reside inside your specific statement range block (${rangeStart} to ${rangeEnd}).`);
+    return;
+  }
+  
+  if(endDate < startDate){
+    document.getElementById("adjustmentEndDate").classList.add("input-error");
+    alert("End date must be after start date.");
+    return;
+  }
+
+  const baseVoiceVatInc = 168;
+  const baseDataVatInc = planAmount - baseVoiceVatInc;
+
+  const baseVoiceVatEx = baseVoiceVatInc / 1.12; 
+  const baseDataVatEx = baseDataVatInc / 1.12;
+
+  const voiceVatEx = Math.max(baseVoiceVatEx - voiceDiscountEx, 0);
+  const dataVatEx = Math.max(baseDataVatEx - dataDiscountEx, 0);
+
+  const voiceVatInc = voiceVatEx * 1.12;
+  const dataVatInc = dataVatEx * 1.12;
+
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const nonServiceDays = Math.floor((endDate - startDate) / msPerDay);
+
+  const dailyDataInc = dataVatInc / billingDays;
+  const dailyVoiceInc = voiceVatInc / billingDays;
+
+  let dataDispute = 0;
+  let voiceDispute = 0;
+
+  if(mode === "voice") voiceDispute = dailyVoiceInc * nonServiceDays;
+  else if(mode === "data50") dataDispute = (dailyDataInc * nonServiceDays) * 0.50;
+  else if(mode === "data75") dataDispute = (dailyDataInc * nonServiceDays) * 0.75;
+  else if(mode === "data100") dataDispute = dailyDataInc * nonServiceDays;
+  else if(mode === "both"){
+    dataDispute = dailyDataInc * nonServiceDays;
+    voiceDispute = dailyVoiceInc * nonServiceDays;
+  }
+
+  const total = dataDispute + voiceDispute;
+  const ofscRemarks = (currentRebateMode === "rental") ? "RENTAL REBATE" : (document.getElementById("rebateTagging").innerText || "-");
+  const trackingReferenceNumber = document.getElementById("repairTicketNumber").value || "-";
+  const adjustmentCode = getAdjustmentCode(mode);
+
+  document.getElementById("rCustomer").innerText = document.getElementById("customerName").value || "-";
+  document.getElementById("rService").innerText = document.getElementById("serviceNumber").value || "-";
+  document.getElementById("rInvoice").innerText = document.getElementById("invoiceNumber").value || "-";
+  document.getElementById("billingDays").innerText = billingDays;
+  document.getElementById("nonServiceDays").innerText = nonServiceDays;
+
+  document.getElementById("dataVatInc").innerText = formatMoney(dataVatInc);
+  document.getElementById("dataVatEx").innerText = formatMoney(dataVatEx);
+  document.getElementById("voiceVatInc").innerText = formatMoney(voiceVatInc);
+  document.getElementById("voiceVatExDisplay").innerText = formatMoney(voiceVatEx);
+  document.getElementById("discountAmount").innerText = formatMoney(voiceDiscountEx + dataDiscountEx);
+  document.getElementById("casioTotal").innerText = formatMoney(total);
+
+  document.getElementById("results").style.display = "block";
+  document.getElementById("tAmount").innerText = formatMoney(total);
+  document.getElementById("tService").innerText = document.getElementById("serviceNumber").value || "-";
+  document.getElementById("tInvoice").innerText = document.getElementById("invoiceNumber").value || "-";
+
+  const others = document.getElementById("others").value || "-";
+  const adjustmentStart = startDate.toLocaleDateString('en-US');
+  const adjustmentEnd = endDate.toLocaleDateString('en-US');
+  let msfDetails = "";
+
+  const dailyVoiceVatEx = voiceVatEx / billingDays;
+  const dailyDataVatEx = dataVatEx / billingDays;
+
+  const cleanVoiceVatExStr = Number(voiceVatEx.toFixed(2)).toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const cleanDataVatExStr = Number(dataVatEx.toFixed(2)).toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+  if(mode === "voice"){
+    const voiceAmount = Math.ceil(dailyVoiceVatEx * nonServiceDays);
+    msfDetails = `VOICE MSF: ${cleanVoiceVatExStr} FROM ${adjustmentStart} TO ${adjustmentEnd} = ${voiceAmount} (VAT ex.)`;
+  } else if(mode === "data50" || mode === "data75" || mode === "data100"){
+    let multiplier = mode === "data50" ? 0.50 : (mode === "data75" ? 0.75 : 1);
+    const dataAmount = Math.ceil(dailyDataVatEx * nonServiceDays * multiplier);
+    msfDetails = `DATA MSF: ${cleanDataVatExStr} FROM ${adjustmentStart} TO ${adjustmentEnd} = ${dataAmount} (VAT ex.)`;
+  } else if(mode === "both"){
+    const voiceAmount = Math.ceil(dailyVoiceVatEx * nonServiceDays);
+    const dataAmount = Math.ceil(dailyDataVatEx * nonServiceDays);
+    msfDetails = `VOICE MSF: ${cleanVoiceVatExStr} FROM ${adjustmentStart} TO ${adjustmentEnd} = ${voiceAmount} (VAT ex.) | DATA MSF: ${cleanDataVatExStr} FROM ${adjustmentStart} TO ${adjustmentEnd} = ${dataAmount} (VAT ex.)`;
+  }
+
+  const wrapper = document.getElementById("nonRebatableWrapper");
+  const reasonDropdown = document.getElementById("nonRebatableReason");
+  const nonRebatableReasonText = (currentRebateMode !== "rental" && wrapper.classList.contains("visible-wrapper") && reasonDropdown.value) ? ` | REASON: ${reasonDropdown.value}` : "";
+
+  document.getElementById("tOthers").innerText = `O=${adjustmentCode} | ${trackingReferenceNumber} | ${ofscRemarks}${nonRebatableReasonText} | ${msfDetails} | ${others}`;
+  document.getElementById("tCustomer").innerText = `${document.getElementById("customerName").value} ${document.getElementById("accountNumber").value}`.trim() || "-";
+}
+
+function copyCasioLine(){
+  const customer = document.getElementById("customerName").value;
+  const account = document.getElementById("accountNumber").value;
+  const service = document.getElementById("serviceNumber").value;
+  const invoice = document.getElementById("invoiceNumber").value;
+  const amount = document.getElementById("casioTotal").innerText;
+  const othersLine = document.getElementById("tOthers").innerText;
+  const accountPart = account ? ` ${account}` : "";
+
+  const line = `C: ${customer}${accountPart} | \n` + `A: ${amount} | \n` + `S: ${service} | \n` + `I: ${invoice} | \n` + `${othersLine}`;
+
+  navigator.clipboard.writeText(line).then(() => { alert("CASIO lines copied vertically!"); }).catch(() => { alert("Copy failed."); });
+}
+
+// --- DROPDOWN SELECTION MATRICES ---
+function populateResolution(){
+  const category = document.getElementById("ofscCategory").value;
+  const resolution = document.getElementById("resolution");
+  resolution.innerHTML = '<option value="">Select Resolution</option>';
+  document.getElementById("affectedElement").innerHTML = '<option value="">Select Element</option>';
+  document.getElementById("findings").innerHTML = '<option value="">Select Findings</option>';
+  checkDropdownState();
+  if(!category) return;
+  Object.keys(ofscData[category]).forEach(res => { resolution.innerHTML += `<option value="${res}">${res}</option>`; });
+}
+
+function populateElements(){
+  const category = document.getElementById("ofscCategory").value;
+  const resolution = document.getElementById("resolution").value;
+  const affected = document.getElementById("affectedElement");
+  affected.innerHTML = '<option value="">Select Element</option>';
+  document.getElementById("findings").innerHTML = '<option value="">Select Findings</option>';
+  checkDropdownState();
+  if(!category || !resolution) return;
+  Object.keys(ofscData[category][resolution]).forEach(el => { affected.innerHTML += `<option value="${el}">${el}</option>`; });
+}
+
+function populateFindings(){
+  const category = document.getElementById("ofscCategory").value;
+  const resolution = document.getElementById("resolution").value;
+  const element = document.getElementById("affectedElement").value;
+  const findings = document.getElementById("findings");
+  findings.innerHTML = '<option value="">Select Findings</option>';
+  checkDropdownState();
+  if(!category || !resolution || !element) return;
+  Object.keys(ofscData[category][resolution][element]).forEach(f => { findings.innerHTML += `<option value="${f}">${f}</option>`; });
+}
+
+function showTagging(){ checkDropdownState(); }
+
+function checkDropdownState() {
+  if(currentRebateMode === "rental") return;
+
+  const category = document.getElementById("ofscCategory").value;
+  const resolution = document.getElementById("resolution").value;
+  const element = document.getElementById("affectedElement").value;
+  const findings = document.getElementById("findings").value;
+  const wrapper = document.getElementById("nonRebatableWrapper");
+  const reasonDropdown = document.getElementById("nonRebatableReason");
+
+  if(!category || !resolution || !element || !findings){
+    document.getElementById("rebateTagging").innerText = "-";
+    document.getElementById("rebateTagging").style.color = "#64748b";
+    wrapper.classList.remove("visible-wrapper");
+    reasonDropdown.value = "";
+    return;
+  }
+
+  const tagging = ofscData[category][resolution][element][findings];
+  const formatted = `${category} / ${resolution} / ${element} / ${findings} / ${tagging}`.toUpperCase();
+  document.getElementById("rebateTagging").innerText = formatted;
+
+  if (tagging === "REBATABLE") {
+    document.getElementById("rebateTagging").style.color = "#4ade80";
+    wrapper.classList.remove("visible-wrapper");
+    reasonDropdown.value = "";
+  } else {
+    document.getElementById("rebateTagging").style.color = "#f87171";
+    wrapper.classList.add("visible-wrapper");
+  }
+}
+
+function getAdjustmentCode(mode){
+  if(mode === "both") return 100;
+  if(mode === "voice") return 101;
+  if(mode === "data100") return 500;
+  if(mode === "data50" || mode === "data75") return 501;
+  return "";
+}
+</script>
+
+</body>
+</html>
